@@ -32,7 +32,8 @@ function setup() {
 }
 
 function draw() {
-	background("#AFE8FB");
+	// background("#AFE8FB");
+	background(20);
 	drawShips(ships);
 	updateShips(ships);
 	drawBullets(bullets);

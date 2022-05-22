@@ -104,10 +104,13 @@ function updateShip(ship) {
 	}
 	if (random(1) < bulletChance * (ships.length - 1) && ship.bulletCount > 0) {
 		if (ship.hasBurst) {
-			bullets.push(createBullet(ship, 0), createBullet(ship, PI / 6), createBullet(ship, -PI / 6));
+			bullets.push(createBullet(ship, ship.vel.heading() + 0), createBullet(ship, ship.vel.heading()  + PI / 6), createBullet(ship, ship.vel.heading()  - PI / 6));
 			ship.bulletCount -= 3;
 		} else {
-			bullets.push(createBullet(ship, 0));
+			// aim and fire! (at closest ship)
+			const targetShip = findClosestShip(ship.pos, ships);
+			const angle = aimToTarget(ship.pos, targetShip.pos);
+			bullets.push(createBullet(ship, angle));
 			ship.bulletCount -= 1;
 		}
 	}
@@ -120,11 +123,11 @@ function updateShips(ships) {
 }
 
 function createBullet(ship, angle) {
-
+	const bulletPos = ship.pos.copy()
+	bulletPos.add(p5.Vector.fromAngle(angle, 40));
 	let bullet = {
-		mother: ship,
-		pos: ship.pos.copy(),
-		vel: p5.Vector.fromAngle(ship.vel.heading() + angle, random(2.5, 7.5)),
+		pos: bulletPos,
+		vel: p5.Vector.fromAngle(angle, random(2.5, 7.5)),
 		isDead: false,
 	};
 	return bullet;
@@ -162,7 +165,7 @@ function updateBullet(bullet, targets) {
 		bullet.pos.y += height;
 	}
 	for (let target of targets) {
-		if (bullet.pos.dist(target.pos) < 40 && target !== bullet.mother) {
+		if (bullet.pos.dist(target.pos) < 40) {
 			triggerExplosion(bullet, target);
 		}
 	}
@@ -224,4 +227,22 @@ function drawExplosions(explosions) {
 	for (let explosion of explosions) {
 		drawExplosion(explosion);
 	}
+}
+
+function findClosestShip(pos, ships) {
+	let closestShip;
+	let lowestDist;
+	for (let ship of ships) {
+		const curDist = pos.dist(ship.pos);
+		if ((!closestShip || lowestDist >curDist )&& curDist) {
+			closestShip = ship;
+			lowestDist = curDist;
+		}
+	}
+	return closestShip;
+}
+
+function aimToTarget(pos, targetPos) {
+	const angle = p5.Vector.sub(pos, targetPos).heading();
+	return angle;
 }
